@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>EXP_1_3_5.html</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+<style>
+body {
+    background-color: #1e1e1e;
+    color: white;
+    font-family: monospace;
+    padding: 15px;
+}
+
+.editor {
+    display: flex;
+    border: 1px solid #444;
+    height: 300px;
+    font-family: monospace;
+}
+
+#lineNumbers {
+    background: #111;
+    color: #00ff00;
+    padding: 10px 8px;
+    margin: 0;
+    text-align: right;
+    user-select: none;
+    overflow: hidden;
+    white-space: pre;
+    line-height: 1.4em;
+}
+
+#code {
+    flex: 1;
+    background: #111;
+    color: white;
+    border: none;
+    padding: 10px;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    line-height: 1.4em;
+    font-family: monospace;
+}
+
+button {
+    margin-top: 10px;
+    margin-right: 6px;
+    padding: 8px 14px;
+    background: #007acc;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#output {
+    background: #111;
+    padding: 10px;
+    margin-top: 10px;
+    min-height: 50px;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<h3>EXP_1_3_5.html</h3>
+
+<div class="editor">
+<pre id="lineNumbers"></pre>
+<textarea id="code" wrap="off">import sympy as sp
+
+def solve_trajectory(x=None, y=None, theta=None, v0=None, g=None):
+    # Define symbols
+    x_sym, y_sym, theta_deg_sym, v0_sym, g_sym = sp.symbols('x y theta_deg v0 g')
+    
+    # Convert theta from degrees to radians for calculations
+    theta_rad_sym = sp.rad(theta_deg_sym)
+    
+    # Define the trajectory equation
+    trajectory_eq = y_sym - x_sym * sp.tan(theta_rad_sym) + (g_sym * x_sym**2) / (2 * v0_sym**2 * sp.cos(theta_rad_sym)**2)
+    
+    # Solve for the unknown variable
+    if x is None:
+        result = sp.solve(trajectory_eq.subs({y_sym: y, theta_deg_sym: theta, v0_sym: v0, g_sym: g}), x_sym)
+    elif y is None:
+        result = sp.solve(trajectory_eq.subs({x_sym: x, theta_deg_sym: theta, v0_sym: v0, g_sym: g}), y_sym)
+    elif theta is None:
+        result = sp.solve(trajectory_eq.subs({x_sym: x, y_sym: y, v0_sym: v0, g_sym: g}), theta_deg_sym)
+    elif v0 is None:
+        result = sp.solve(trajectory_eq.subs({x_sym: x, y_sym: y, theta_deg_sym: theta, g_sym: g}), v0_sym)
+    elif g is None:
+        result = sp.solve(trajectory_eq.subs({x_sym: x, y_sym: y, theta_deg_sym: theta, v0_sym: v0}), g_sym)
+    else:
+        raise ValueError("One variable must be None to solve.")
+    
+    return result
+
+# Example usage:
+x = 10  # Horizontal displacement in meters
+y = 3  # Vertical displacement in meters
+theta = 35  # Launch angle in degrees
+v0 = None  # Initial velocity in m/s
+g = 9.8  # Solve for gravity
+
+result = solve_trajectory(x=x, y=y, theta=theta, v0=v0, g=g)
+print("Solution for the unknown variable:", result)
+</textarea>
+</div>
+
+<button onclick="runCode()">Run</button>
+
+<div id="output"></div>
+
+<script>
+let pyodideReady = loadPyodide();
+let pyodide;
+
+const code = document.getElementById("code");
+const lineNumbers = document.getElementById("lineNumbers");
+
+function updateLineNumbers() {
+    const lines = code.value.split("\n").length;
+    let numbers = "";
+    for (let i = 1; i <= lines; i++) {
+        numbers += i + "\n";
+    }
+    lineNumbers.textContent = numbers;
+}
+
+code.addEventListener("input", updateLineNumbers);
+code.addEventListener("scroll", () => {
+    lineNumbers.scrollTop = code.scrollTop;
+});
+
+updateLineNumbers();
+
+async function runCode() {
+    pyodide = await pyodideReady;
+
+    document.getElementById("output").innerText = "Running...";
+
+    await pyodide.loadPackage(["sympy"]);
+
+    try {
+        await pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+sys.stdout = StringIO()
+`);
+
+        await pyodide.runPythonAsync(code.value);
+
+        let output = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+        document.getElementById("output").innerText = output;
+
+    } catch(err) {
+        document.getElementById("output").innerText = err;
+    }
+}
+</script>
+
+</body>
+</html>

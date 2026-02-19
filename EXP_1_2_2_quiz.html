@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>EXP_1_2_2_quiz</title>
+
+<style>
+body {
+    background-color: #1e1e1e;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 600px;
+}
+
+.question {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #2a2a2a;
+    border-radius: 8px;
+}
+
+.answers button {
+    display: block;
+    margin: 6px 0;
+    padding: 8px 12px;
+    width: 100%;
+    background: #007acc;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.answers button:hover {
+    background: #005f99;
+}
+
+.correct {
+    background: #2e7d32 !important;
+}
+
+.wrong {
+    background: #c62828 !important;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>EXP_1_2_2 Quiz</h2>
+<div id="quiz"></div>
+<div id="result"></div>
+</div>
+
+<script>
+
+const quizData = [
+{
+    question: "The initial vertical speed is about:",
+    options: ["4.1 m/s", "4.5 m/s", "5 m/s", "5.4 m/s"],
+    correct: 2
+},
+{
+    question: "The landing vertical speed is about (for the first bounce):",
+    options: ["4.1 m/s", "5.4 m/s", "5 m/s", "4.5 m/s"],
+    correct: 0
+},
+{
+    question: "The projectile lands for the first time approximately after:",
+    options: ["1 s", "0.9 s", "1.2 s", "0.5 s"],
+    correct: 1
+},
+{
+    question: "The projectile maximum height is about:",
+    options: ["1.15 m", "1.25 m", "1.05 m", "1.35 m"],
+    correct: 0
+},
+{
+    question: "The collision with the ground lasts for about:",
+    options: ["0.017 s", "0.17 s", "1.17 s", "1.17 s"],
+    correct: 0
+},
+{
+    question: "The acceleration of the ball during the first bounce is about:",
+    options: [
+        "(5 - 2.57) / 0.017 = 143 m/s^2",
+        "-9.8 m/s^2",
+        "9.8 m/s^2",
+        "(5 - (-2.57)) / 0.017 = 445 m/s^2"
+    ],
+    correct: 3
+}
+];
+
+let score = 0;
+let answered = 0;
+
+function loadQuiz() {
+    const quizContainer = document.getElementById("quiz");
+
+    quizData.forEach((q) => {
+        const div = document.createElement("div");
+        div.className = "question";
+
+        const title = document.createElement("p");
+        title.innerText = q.question;
+        div.appendChild(title);
+
+        const answersDiv = document.createElement("div");
+        answersDiv.className = "answers";
+
+        q.options.forEach((option, i) => {
+            const btn = document.createElement("button");
+            btn.innerText = option;
+
+            btn.onclick = () => {
+                if (btn.classList.contains("correct") || btn.classList.contains("wrong")) return;
+
+                answered++;
+
+                if (i === q.correct) {
+                    btn.classList.add("correct");
+                    score++;
+                } else {
+                    btn.classList.add("wrong");
+                }
+
+                if (answered === quizData.length) {
+                    document.getElementById("result").innerText =
+                        "Final Score: " + score + " / " + quizData.length;
+                }
+            };
+
+            answersDiv.appendChild(btn);
+        });
+
+        div.appendChild(answersDiv);
+        quizContainer.appendChild(div);
+    });
+}
+
+loadQuiz();
+
+</script>
+
+</body>
+</html>

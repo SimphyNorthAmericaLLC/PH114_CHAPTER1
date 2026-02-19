@@ -1,0 +1,151 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>EXP_1_3_7_quiz</title>
+
+<style>
+body {
+    background-color: #1e1e1e;
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    width: 600px;
+}
+
+.question {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: #2a2a2a;
+    border-radius: 8px;
+}
+
+.answers button {
+    display: block;
+    margin: 6px 0;
+    padding: 8px 12px;
+    width: 100%;
+    background: #007acc;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.answers button:hover {
+    background: #005f99;
+}
+
+.correct {
+    background: #2e7d32 !important;
+}
+
+.wrong {
+    background: #c62828 !important;
+}
+
+#result {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>EXP_1_3_7 Quiz</h2>
+<div id="quiz"></div>
+<div id="result"></div>
+</div>
+
+<script>
+
+const quizData = [
+{
+    question: "The acceleration across the x-direction (as shown here) is about (angle is defined with respect to the ground)",
+    options: ["3.8 m/s²", "3.5 m/s²", "4.2 m/s²", "3.3 m/s²"],
+    correct: 0
+},
+{
+    question: "The angle of the plane with respect to the ground must be around",
+    options: ["23°", "29°", "32°", "None of these apply"],
+    correct: 0
+},
+{
+    question: "The speed after the box has moved for X m along the plane (starting from rest), its speed must be",
+    options: ["sqrt(2*X*g*sin(angle))", "sqrt(X*g*sin(angle°))", "sqrt(X*g*cos(angle°))", "None of these apply"],
+    correct: 0
+},
+{
+    question: "Based on the previous question, the speed after the box has moved for 1 m along the plane (starting from rest), its speed must be around",
+    options: ["2.76 m", "2.56 m", "2.96 m", "None of these apply"],
+    correct: 0
+},
+{
+    question: "If the x-axis was selected to be along the ground then the acceleration would have been (across the same direction), where the angle is still defined with respect to the ground",
+    options: ["sin(angle)*cos(angle)", "sin(angle)", "cos(angle)", "None of these apply"],
+    correct: 0
+}
+];
+
+let score = 0;
+let answered = 0;
+
+function loadQuiz() {
+    const quizContainer = document.getElementById("quiz");
+
+    quizData.forEach((q) => {
+        const div = document.createElement("div");
+        div.className = "question";
+
+        const title = document.createElement("p");
+        title.innerText = q.question;
+        div.appendChild(title);
+
+        const answersDiv = document.createElement("div");
+        answersDiv.className = "answers";
+
+        q.options.forEach((option, i) => {
+            const btn = document.createElement("button");
+            btn.innerText = option;
+
+            btn.onclick = () => {
+                if (btn.classList.contains("correct") || btn.classList.contains("wrong")) return;
+
+                answered++;
+
+                if (i === q.correct) {
+                    btn.classList.add("correct");
+                    score++;
+                } else {
+                    btn.classList.add("wrong");
+                }
+
+                if (answered === quizData.length) {
+                    document.getElementById("result").innerText =
+                        "Final Score: " + score + " / " + quizData.length;
+                }
+            };
+
+            answersDiv.appendChild(btn);
+        });
+
+        div.appendChild(answersDiv);
+        quizContainer.appendChild(div);
+    });
+}
+
+loadQuiz();
+
+</script>
+
+</body>
+</html>
