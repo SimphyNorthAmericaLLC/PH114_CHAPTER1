@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>EXP_1_3_8.html</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"></script>
+
+<style>
+body {
+    background-color: #1e1e1e;
+    color: white;
+    font-family: monospace;
+    padding: 15px;
+}
+
+.editor {
+    display: flex;
+    border: 1px solid #444;
+    height: 300px;
+    font-family: monospace;
+}
+
+#lineNumbers {
+    background: #111;
+    color: #00ff00;
+    padding: 10px 8px;
+    margin: 0;
+    text-align: right;
+    user-select: none;
+    overflow: hidden;
+    white-space: pre;
+    line-height: 1.4em;
+}
+
+#code {
+    flex: 1;
+    background: #111;
+    color: white;
+    border: none;
+    padding: 10px;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    line-height: 1.4em;
+    font-family: monospace;
+}
+
+button {
+    margin-top: 10px;
+    margin-right: 6px;
+    padding: 8px 14px;
+    background: #007acc;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#output {
+    background: #111;
+    padding: 10px;
+    margin-top: 10px;
+    min-height: 50px;
+    white-space: pre-wrap;
+}
+</style>
+</head>
+
+<body>
+
+<h3>EXP_1_3_8.html</h3>
+
+<div class="editor">
+<pre id="lineNumbers"></pre>
+<textarea id="code" wrap="off">import numpy as np
+
+g = 9.81
+
+print("\nTwo Projectiles Meeting Mid-Air")
+print("--------------------------------")
+print("Assumptions:")
+print("- Same launch height")
+print("- Same launch time")
+print("- Horizontal separation x")
+print("- No air resistance\n")
+
+# ---- USER INPUT ----
+x = float(input("Initial horizontal separation x (m): "))
+
+u1 = float(input("Speed u1 (m/s): "))
+th1 = float(input("Angle theta1 (deg): "))
+
+print("\nDefine ONE of the following for projectile 2:")
+print("1 → Speed u2")
+print("2 → Angle theta2")
+
+choice = input("Your choice (1 or 2): ").strip()
+
+th1 = np.deg2rad(th1)
+
+if choice == "1":
+    u2 = float(input("Speed u2 (m/s): "))
+    sin_ratio = u1 * np.sin(th1) / u2
+
+    if abs(sin_ratio) > 1:
+        raise ValueError("No physical solution: vertical components cannot match.")
+
+    th2 = np.arcsin(sin_ratio)
+
+elif choice == "2":
+    th2 = float(input("Angle theta2 (deg): "))
+    th2 = np.deg2rad(th2)
+
+    if abs(np.sin(th2)) < 1e-6:
+        raise ValueError("theta2 too small: no vertical motion.")
+
+    u2 = u1 * np.sin(th1) / np.sin(th2)
+
+else:
+    raise ValueError("Invalid choice.")
+
+# ---- MEETING TIME ----
+denom = u1*np.cos(th1) + u2*np.cos(th2)
+
+if denom <= 0:
+    raise ValueError("Projectiles do not approach each other horizontally.")
+
+t_meet = x / denom
+
+# ---- MEETING POSITION ----
+x_meet = u1*np.cos(th1)*t_meet
+y_meet = u1*np.sin(th1)*t_meet - 0.5*g*t_meet**2
+
+# ---- OUTPUT ----
+print("\n--- RESULTS ---")
+print(f"u2           = {u2:.3f} m/s")
+print(f"theta2       = {np.rad2deg(th2):.2f} deg")
+print(f"meeting time = {t_meet:.3f} s")
+print(f"x_meet       = {x_meet:.3f} m")
+print(f"y_meet       = {y_meet:.3f} m")
+
+if y_meet < 0:
+    print("\n⚠️  Warning: projectiles meet below launch height.")
+
+print("\nSolution found analytically.")
+</textarea>
+</div>
+
+<button onclick="runCode()">Run</button>
+
+<div id="output"></div>
+
+<script>
+let pyodideReady = loadPyodide();
+let pyodide;
+
+const code = document.getElementById("code");
+const lineNumbers = document.getElementById("lineNumbers");
+
+function updateLineNumbers() {
+    const lines = code.value.split("\n").length;
+    let numbers = "";
+    for (let i = 1; i <= lines; i++) {
+        numbers += i + "\n";
+    }
+    lineNumbers.textContent = numbers;
+}
+
+code.addEventListener("input", updateLineNumbers);
+code.addEventListener("scroll", () => {
+    lineNumbers.scrollTop = code.scrollTop;
+});
+
+updateLineNumbers();
+
+async function runCode() {
+    pyodide = await pyodideReady;
+
+    document.getElementById("output").innerText = "Running...";
+
+    await pyodide.loadPackage(["numpy"]);
+
+    try {
+        await pyodide.runPythonAsync(`
+import sys
+from io import StringIO
+import js
+sys.stdout = StringIO()
+input = lambda prompt='': js.prompt(prompt)
+`);
+
+        await pyodide.runPythonAsync(code.value);
+
+        let output = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+        document.getElementById("output").innerText = output;
+
+    } catch(err) {
+        document.getElementById("output").innerText = err;
+    }
+}
+</script>
+
+</body>
+</html>
