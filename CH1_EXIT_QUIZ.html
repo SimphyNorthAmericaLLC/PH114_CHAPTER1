@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Projectile & Circular Motion Quiz — Restart on Wrong</title>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; line-height: 1.45; margin: 0; padding: 24px; background: #0b0b0b; color: #f2f2f2; }
+  #quiz2 { max-width: 760px; margin: 0 auto; }
+  #q2_stem { margin: .5rem 0 1rem; font-size: 1.05rem; }
+  #q2_options { display: grid; gap: .5rem; }
+  .q2_option { border: 1px solid #333; border-radius: 10px; padding: .6rem .8rem; cursor: pointer; text-align: left; background:#121212; }
+  .q2_option:hover { background: #161616; }
+  #q2_feedback { margin-top: .9rem; min-height: 1.2rem; color:#aaa; }
+  #q2_nav { margin-top: 1rem; display: flex; gap: .6rem; }
+  button { padding: .55rem .9rem; border-radius: 10px; border: 1px solid #333; background: #1b1b1b; color: #f2f2f2; cursor: pointer; }
+</style>
+</head>
+<body>
+  <div id="quiz2">
+    <h3 id="q2_progress"></h3>
+    <div id="q2_stem"></div>
+    <div id="q2_options"></div>
+    <div id="q2_feedback"></div>
+    <div id="q2_nav">
+      <button id="q2_restart" style="margin-left:auto;">Restart</button>
+    </div>
+  </div>
+
+<script>
+/* Exact wording preserved. Option order is exactly as provided (no shuffling). */
+const quiz2 = [
+  {
+    stem: "The magnitude of the x-axis acceleration along a projectile that is fired at an angle when no other type of resistance is present is a) 4.9 m/s^2, b) -9.8 m/s^2, c) 9.8 m/s^2, or d) zero.",
+    choices: ["4.9 m/s^2","-9.8 m/s^2","9.8 m/s^2","zero"],
+    correctIndex: 3
+  },
+  {
+    stem: "The magnitude of the y-axis acceleration of a projectile that is fired at an angle when no other type of resistance is present is a) dependent on the initial velocity, b) +9.8 m/s^2 or -9.8 m/s^2 depending on whether the projectile is on its way down or up c) zero",
+    choices: ["dependent on the initial velocity","+9.8 m/s^2 or -9.8 m/s^2 depending on whether the projectile is on its way down or up","zero"],
+    correctIndex: 1
+  },
+  {
+    stem: "Can a projectile literally travel in a straight line along the horizontal? a) absolutely yes, b) absolutely no.",
+    choices: ["absolutely yes","absolutely no"],
+    correctIndex: 1
+  },
+  {
+    stem: "A projectile has maximum speed while having zero acceleration. Can this be possible? A) Yes b) No c) More information is required.",
+    choices: ["Yes","No","More information is required"],
+    correctIndex: 1
+  },
+  {
+    stem: "A projectile has zero speed while having non-zero acceleration. Can this be possible? A) Yes b) No c) More information is required.",
+    choices: ["Yes","No","More information is required"],
+    correctIndex: 0
+  },
+  {
+    stem: "If a projectile’s motion can be described as u=1/2 t^2 where t is time then its motion is a) constant acceleration b) variable acceleration c) more information is required about",
+    choices: ["constant acceleration","variable acceleration","more information is required about"],
+    correctIndex: 1
+  },
+  {
+    stem: "If a projectile’s motion can be described as u=bt where b=2 (m/s^2), and t is time then the distance that it will cover after 1 seconds is a) 1 m b) 1.5 m c) 2 m d) 2.5 m",
+    choices: ["1 m","1.5 m","2 m","2.5 m"],
+    correctIndex: 0
+  },
+  {
+    stem: "A projectile is fired at an angle from the ground components 1 m/s along the vertical and 0.5 m/s along the horizontal. After time t=0.3 s, it lands on a height H=1.7 m from the ground (the launching position). It’s horizontal landing speed can be calculated as a) 0.2 m/s b) 0.3 m/s c) 0.4 m/s d) 0.5 m/s e) None of these",
+    choices: ["0.2 m/s","0.3 m/s","0.4 m/s","0.5 m/s","None of these"],
+    correctIndex: 3
+  },
+  {
+    stem: "Two objects at the same height, both with zero vertical initial speeds, but one has constant horizontal acceleration and the other has non-constant horizontal acceleration. The object that will land first is (no air drag) a) The one with constant horizontal acceleration, b) The one with non-constant horizontal acceleration, c) Both at the same time, or d) More information is required.",
+    choices: ["The one with constant horizontal acceleration","The one with non-constant horizontal acceleration","Both at the same time","More information is required"],
+    correctIndex: 2
+  },
+  {
+    stem: "A box moving from left to right along the horizontal changes its speed from 1 m/s to 1 m/s but from right to left during 0.5 seconds. Its acceleration was a) 2 m/s^2 b) 0 m/s^2 c) 4 m/s^2 or d) None of these apply",
+    choices: ["2 m/s^2","0 m/s^2","4 m/s^2","3 m/s^2"],
+    correctIndex: 2
+  },
+  {
+    stem: "Midway along an inclined plane whose angle Z is defined with respect to the vertical (and not the ground), an object will have acceleration a) g sin (Z), b) g cos(Z), c) 0, or d) g.",
+    choices: ["g sin(Z)","g cos(Z)","0","g"],
+    correctIndex: 1
+  },
+  {
+    stem: "An object climbs an inclined plane of angle Z that is defined with respect to the ground. Momentarily, the object comes to a full stop at the top of the plane. Right then, its acceleration is a) 0, b) g sin(Z), c) g cos(Z), or d) g.",
+    choices: ["0","g sin(Z)","g cos(Z)","g"],
+    correctIndex: 1
+  },
+  {
+    stem: "In order to implement a uniform circular motion, we have defined the x and y-position of the ball as a) r·cos(ω·t), r·sin(ω·t) b) r·cos^2(ω·t), r·sin^2(ω·t) c) r·cos(ω·t^2), r·sin(ω·t^2) d) None of these",
+    choices: ["r·cos(ω·t), r·sin(ω·t)","r·cos^2(ω·t), r·sin^2(ω·t)","r·cos(ω·t^2), r·sin(ω·t^2)","None of these"],
+    correctIndex: 0
+  },
+  {
+    stem: "The direction of the radial acceleration is: a) Towards the center b) Tangential to the radius c) Some random direction d) None of these",
+    choices: ["Towards the center","Tangential to the radius","Some random direction","None of these"],
+    correctIndex: 0
+  },
+  {
+    stem: "The reason for the presence of radial acceleration is: a) the linear speed changes direction b) the linear speed changes magnitude c) There is always some type of acceleration no matter what the motion is d) None of these",
+    choices: ["the linear speed changes direction","the linear speed changes magnitude","There is always some type of acceleration no matter what the motion is","None of these"],
+    correctIndex: 0
+  },
+  {
+    stem: "A uniform circular motion will always have a) Radial acceleration b) R perpendicular to the u c) Constant linear speed d) All of these",
+    choices: ["Radial acceleration","R perpendicular to the u","Constant linear speed","All of these"],
+    correctIndex: 3
+  },
+  {
+    stem: "A non-uniform circular motion will always have a) Radial acceleration b) linear acceleration c) variable linear speed d) All of these",
+    choices: ["Radial acceleration","linear acceleration","variable linear speed","All of these"],
+    correctIndex: 3
+  }
+];
+
+const els = {
+  progress: document.getElementById('q2_progress'),
+  stem: document.getElementById('q2_stem'),
+  options: document.getElementById('q2_options'),
+  feedback: document.getElementById('q2_feedback'),
+  restart: document.getElementById('q2_restart'),
+};
+
+let idx = 0;
+let score = 0;
+
+function render() {
+  const total = quiz2.length;
+  els.progress.textContent = `Question ${idx+1} of ${total}  ·  Score: ${score}/${total}`;
+  els.stem.textContent = quiz2[idx].stem;
+  els.options.innerHTML = '';
+  els.feedback.textContent = '';
+
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  quiz2[idx].choices.forEach((text, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'q2_option';
+    btn.type = 'button';
+    btn.innerHTML = `<strong>${letters[i]})</strong> ${text}`;
+    btn.addEventListener('click', () => handleChoice(i));
+    els.options.appendChild(btn);
+  });
+}
+
+function handleChoice(i) {
+  const correct = quiz2[idx].correctIndex;
+  if (i === correct) {
+    score++;
+    els.feedback.textContent = 'Correct.';
+    setTimeout(() => {
+      idx++;
+      if (idx < quiz2.length) {
+        render();
+      } else {
+        els.progress.textContent = `Completed · Final Score: ${score}/${quiz2.length}`;
+        els.stem.textContent = 'Quiz finished.';
+        els.options.innerHTML = '';
+        els.feedback.textContent = 'Press Restart to try again.';
+      }
+    }, 600);
+  } else {
+    els.feedback.textContent = 'Incorrect — restarting from Question 1…';
+    setTimeout(() => { idx = 0; score = 0; render(); }, 700);
+  }
+}
+
+els.restart.addEventListener('click', () => { idx = 0; score = 0; render(); });
+render();
+</script>
+</body>
+</html>
