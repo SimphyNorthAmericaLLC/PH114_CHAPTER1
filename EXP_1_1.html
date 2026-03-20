@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+        }
+        input, select, button {
+            margin: 10px 0;
+            padding: 8px;
+            font-size: 16px;
+        }
+        .result {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Unit Converter</h1>
+
+    <!-- Length Conversion -->
+    <h2>Length Conversion</h2>
+    <label for="lengthValue">Enter Length:</label>
+    <input type="number" id="lengthValue" placeholder="Enter value" required>
+    <select id="lengthUnits">
+        <option value="feetToMeters">Feet to Meters</option>
+        <option value="metersToFeet">Meters to Feet</option>
+    </select>
+    <button id="convertLengthBtn">Convert Length</button>
+
+    <p id="lengthResult" class="result"></p>
+
+    <!-- Mass Conversion -->
+    <h2>Mass Conversion</h2>
+    <label for="massValue">Enter Mass:</label>
+    <input type="number" id="massValue" placeholder="Enter value" required>
+    <select id="massUnits">
+        <option value="poundsToKg">Pounds to Kilograms</option>
+        <option value="kgToPounds">Kilograms to Pounds</option>
+    </select>
+    <button id="convertMassBtn">Convert Mass</button>
+
+    <p id="massResult" class="result"></p>
+
+    <!-- Time Conversion -->
+    <h2>Time Conversion</h2>
+    <label for="timeValue">Enter Time:</label>
+    <input type="number" id="timeValue" placeholder="Enter value" required>
+    <select id="timeUnits">
+        <option value="secondsToMinutes">Seconds to Minutes</option>
+        <option value="minutesToSeconds">Minutes to Seconds</option>
+    </select>
+    <button id="convertTimeBtn">Convert Time</button>
+
+    <p id="timeResult" class="result"></p>
+
+    <!-- Volume Conversion (Buttload to Cubic Meters) -->
+    <h2>Volume Conversion</h2>
+    <label for="volumeValue">Enter Volume:</label>
+    <input type="number" id="volumeValue" placeholder="Enter value" required>
+    <select id="volumeUnits">
+        <option value="buttloadToM3">Buttload to Cubic Meters</option>
+    </select>
+    <button id="convertVolumeBtn">Convert Volume</button>
+
+    <p id="volumeResult" class="result"></p>
+
+    <script>
+        // Length Conversion Function
+        function convertLength() {
+            var value = parseFloat(document.getElementById("lengthValue").value);
+            var units = document.getElementById("lengthUnits").value;
+            var result;
+
+            if (!isNaN(value)) {
+                if (units === "feetToMeters") {
+                    result = value * 0.3048; // 1 foot = 0.3048 meters
+                } else if (units === "metersToFeet") {
+                    result = value / 0.3048; // 1 meter = 3.28084 feet
+                }
+                document.getElementById("lengthResult").textContent = `Result: ${result.toFixed(4)} ${units === 'feetToMeters' ? 'meters' : 'feet'}`;
+            } else {
+                document.getElementById("lengthResult").textContent = "Please enter a valid number.";
+            }
+        }
+
+        // Mass Conversion Function
+        function convertMass() {
+            var value = parseFloat(document.getElementById("massValue").value);
+            var units = document.getElementById("massUnits").value;
+            var result;
+
+            if (!isNaN(value)) {
+                if (units === "poundsToKg") {
+                    result = value * 0.453592; // 1 pound = 0.453592 kilograms
+                } else if (units === "kgToPounds") {
+                    result = value / 0.453592; // 1 kilogram = 2.20462 pounds
+                }
+                document.getElementById("massResult").textContent = `Result: ${result.toFixed(4)} ${units === 'poundsToKg' ? 'kilograms' : 'pounds'}`;
+            } else {
+                document.getElementById("massResult").textContent = "Please enter a valid number.";
+            }
+        }
+
+        // Time Conversion Function
+        function convertTime() {
+            var value = parseFloat(document.getElementById("timeValue").value);
+            var units = document.getElementById("timeUnits").value;
+            var result;
+
+            if (!isNaN(value)) {
+                if (units === "secondsToMinutes") {
+                    result = value / 60; // 60 seconds = 1 minute
+                } else if (units === "minutesToSeconds") {
+                    result = value * 60; // 1 minute = 60 seconds
+                }
+                document.getElementById("timeResult").textContent = `Result: ${result.toFixed(2)} ${units === 'secondsToMinutes' ? 'minutes' : 'seconds'}`;
+            } else {
+                document.getElementById("timeResult").textContent = "Please enter a valid number.";
+            }
+        }
+
+        // Volume Conversion Function (Buttload to Cubic Meters)
+        function convertVolume() {
+            var value = parseFloat(document.getElementById("volumeValue").value);
+            var units = document.getElementById("volumeUnits").value;
+            var result;
+
+            if (!isNaN(value)) {
+                if (units === "buttloadToM3") {
+                    result = value * 0.477; // 1 buttload = 0.477 m³
+                }
+                document.getElementById("volumeResult").textContent = `Result: ${result.toFixed(4)} cubic meters`;
+            } else {
+                document.getElementById("volumeResult").textContent = "Please enter a valid number.";
+            }
+        }
+
+        // Event listeners for buttons
+        document.getElementById("convertLengthBtn").addEventListener("click", convertLength);
+        document.getElementById("convertMassBtn").addEventListener("click", convertMass);
+        document.getElementById("convertTimeBtn").addEventListener("click", convertTime);
+        document.getElementById("convertVolumeBtn").addEventListener("click", convertVolume);
+    </script>
+
+</body>
+</html>
