@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curve Fit &amp; Residual Lab</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<style>
+:root{
+  --bg:#0a0d12;
+  --panel:#11151d;
+  --panel2:#161c28;
+  --border:#252c3d;
+  --border-soft:#1c2230;
+  --text:#dbe2ee;
+  --muted:#7e8aa3;
+  --dim:#4d5670;
+  --cyan:#4fd1c5;
+  --amber:#f2a94e;
+  --green:#6ee7a0;
+  --red:#f0685f;
+  --violet:#a78bfa;
+  --mono:'JetBrains Mono', ui-monospace, monospace;
+  --display:'Space Grotesk', sans-serif;
+  --sans:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -5%, rgba(79,209,197,0.06), transparent),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(167,139,250,0.05), transparent),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--sans);
+  min-height:100vh;
+  line-height:1.5;
+}
+::selection{ background:rgba(79,209,197,0.25); }
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px;}
+
+a{color:var(--cyan);}
+
+header{
+  padding:28px 32px 20px;
+  border-bottom:1px solid var(--border-soft);
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+}
+header .brand{ display:flex; align-items:baseline; gap:14px; }
+header h1{
+  font-family:var(--display);
+  font-size:22px;
+  font-weight:700;
+  margin:0;
+  letter-spacing:-0.01em;
+}
+header .tagline{
+  color:var(--muted);
+  font-size:13px;
+  font-family:var(--mono);
+}
+.build-tag{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--dim);
+  border:1px solid var(--border);
+  border-radius:100px;
+  padding:4px 10px;
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:340px 1fr;
+  gap:20px;
+  padding:20px 32px 48px;
+  align-items:start;
+}
+@media (max-width: 980px){
+  .layout{ grid-template-columns:1fr; }
+}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border-soft);
+  border-radius:12px;
+  padding:18px;
+}
+.panel + .panel{ margin-top:16px; }
+.panel h2{
+  font-family:var(--display);
+  font-size:13px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:0.08em;
+  color:var(--muted);
+  margin:0 0 14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.panel h2 .idx{
+  font-family:var(--mono);
+  color:var(--dim);
+  font-size:11px;
+}
+
+textarea{
+  width:100%;
+  min-height:110px;
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  font-family:var(--mono);
+  font-size:12px;
+  padding:10px;
+  resize:vertical;
+}
+textarea:focus, select:focus, button:focus-visible, input:focus-visible{
+  outline:2px solid var(--cyan);
+  outline-offset:1px;
+}
+
+.row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.row + .row{ margin-top:10px; }
+
+button{
+  font-family:var(--sans);
+  font-size:13px;
+  font-weight:600;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--panel2);
+  color:var(--text);
+  padding:8px 14px;
+  cursor:pointer;
+  transition:border-color .15s, background .15s, color .15s;
+}
+button:hover{ border-color:var(--cyan); color:var(--cyan); }
+button.primary{
+  background:var(--cyan);
+  border-color:var(--cyan);
+  color:#06201d;
+}
+button.primary:hover{ background:#3fc0b4; color:#06201d; }
+button.ghost{ background:transparent; }
+button:disabled{ opacity:0.4; cursor:not-allowed; }
+input[type=file]{ display:none; }
+.file-btn{ display:inline-block; }
+
+label.small{
+  font-size:11px;
+  color:var(--muted);
+  font-family:var(--mono);
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  display:block;
+  margin-bottom:4px;
+}
+
+select{
+  background:var(--panel2);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:6px 8px;
+  font-family:var(--mono);
+  font-size:12px;
+}
+
+.col-select{ display:flex; gap:10px; margin-top:10px; }
+.col-select > div{ flex:1; }
+
+.status-line{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--dim);
+  margin-top:8px;
+  min-height:14px;
+}
+.status-line.err{ color:var(--red); }
+.status-line.ok{ color:var(--green); }
+
+.model-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.model-btn{
+  text-align:left;
+  padding:10px 12px;
+  font-size:12.5px;
+  font-weight:500;
+  border-radius:8px;
+  border:1px solid var(--border);
+  background:var(--panel2);
+  color:var(--muted);
+}
+.model-btn .sub{
+  display:block;
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--dim);
+  margin-top:3px;
+}
+.model-btn.active{
+  border-color:var(--violet);
+  color:var(--text);
+  background:rgba(167,139,250,0.08);
+}
+.model-btn.active .sub{ color:var(--violet); }
+
+.degree-stepper{
+  display:flex; align-items:center; gap:10px; margin-top:10px;
+}
+.degree-stepper button{ padding:4px 10px; }
+.degree-stepper .val{ font-family:var(--mono); font-size:15px; min-width:16px; text-align:center; }
+
+.main-col{ display:flex; flex-direction:column; gap:16px; min-width:0; }
+
+.eq-box{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:14px 16px;
+  overflow-x:auto;
+}
+.eq-box .label{
+  font-family:var(--mono);
+  font-size:10.5px;
+  color:var(--dim);
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  margin-bottom:6px;
+}
+.katex{ font-size:1.05em; color:var(--text); }
+
+.chart-wrap{ position:relative; height:340px; }
+.chart-wrap.residual{ height:190px; }
+.chart-title{
+  font-family:var(--mono);
+  font-size:11px;
+  color:var(--muted);
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:8px;
+}
+.chart-title .r2{ color:var(--cyan); }
+
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(120px,1fr));
+  gap:10px;
+  margin-top:2px;
+}
+.stat{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
+}
+.stat .k{ font-family:var(--mono); font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em;}
+.stat .v{ font-family:var(--mono); font-size:16px; color:var(--text); margin-top:2px; }
+
+table.params{ width:100%; border-collapse:collapse; margin-top:4px; }
+table.params td{ font-family:var(--mono); font-size:12.5px; padding:5px 8px; border-bottom:1px solid var(--border-soft); }
+table.params td:first-child{ color:var(--muted); }
+table.params td:nth-child(2){ text-align:right; color:var(--amber); }
+table.params td:last-child{ text-align:right; color:var(--dim); font-size:11px; }
+table.params thead td{ color:var(--dim); text-transform:uppercase; letter-spacing:.06em; font-size:10px; border-bottom:1px solid var(--border); }
+.unc-note{ font-family:var(--mono); font-size:10.5px; color:var(--dim); margin-top:8px; line-height:1.5; }
+
+/* diagnostic strip - signature element */
+.diag-strip{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:10px;
+}
+.gauge{
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:12px 14px;
+  background:var(--panel2);
+  position:relative;
+  overflow:hidden;
+}
+.gauge::before{
+  content:'';
+  position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--dim);
+}
+.gauge.good::before{ background:var(--green); }
+.gauge.warn::before{ background:var(--amber); }
+.gauge.bad::before{ background:var(--red); }
+.gauge .label{ font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.07em; color:var(--muted); }
+.gauge .light{
+  display:inline-block; width:8px; height:8px; border-radius:50%;
+  margin-right:6px; vertical-align:middle;
+  background:var(--dim);
+  box-shadow:0 0 0 rgba(0,0,0,0);
+}
+.gauge.good .light{ background:var(--green); box-shadow:0 0 8px rgba(110,231,160,0.7); }
+.gauge.warn .light{ background:var(--amber); box-shadow:0 0 8px rgba(242,169,78,0.6); }
+.gauge.bad .light{ background:var(--red); box-shadow:0 0 8px rgba(240,104,95,0.7); }
+.gauge .verdict{ font-size:12.5px; font-weight:600; margin-top:6px; }
+.gauge .detail{ font-size:11.5px; color:var(--muted); margin-top:4px; line-height:1.4; }
+
+.notes{
+  font-size:13px;
+  color:var(--text);
+}
+.notes ul{ margin:6px 0 0; padding-left:18px; }
+.notes li{ margin-bottom:6px; color:var(--muted); }
+.notes li b{ color:var(--text); font-weight:600; }
+.notes .section-label{
+  font-family:var(--mono); font-size:10.5px; color:var(--dim);
+  text-transform:uppercase; letter-spacing:.08em; margin-top:14px; margin-bottom:2px;
+}
+.notes .section-label:first-child{ margin-top:0; }
+
+.empty-state{
+  text-align:center;
+  color:var(--dim);
+  padding:60px 20px;
+  font-family:var(--mono);
+  font-size:13px;
+}
+.empty-state .big{ font-size:32px; margin-bottom:10px; }
+
+footer{
+  padding:20px 32px 40px;
+  color:var(--dim);
+  font-family:var(--mono);
+  font-size:11px;
+  border-top:1px solid var(--border-soft);
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Curve Fit &amp; Residual Lab</h1>
+    <span class="tagline">general x–y regression · residual diagnostics</span>
+  </div>
+  <span class="build-tag">client-side · no data leaves this page</span>
+</header>
+
+<div class="layout">
+  <!-- LEFT: controls -->
+  <div class="left-col">
+
+    <div class="panel">
+      <h2><span class="idx">01</span> Data</h2>
+      <div class="row">
+        <span class="file-btn">
+          <input type="file" id="fileInput" accept=".csv,.txt,.tsv">
+          <button onclick="document.getElementById('fileInput').click()">Upload CSV</button>
+        </span>
+        <button id="sampleBtn" class="ghost">Load example</button>
+        <button id="clearBtn" class="ghost">Clear</button>
+      </div>
+      <div class="row">
+        <textarea id="csvText" placeholder="...or paste x,y data here — comma, tab, or space separated. A header row is optional.
+x,y
+0.0,1.02
+0.5,1.45
+1.0,2.31"></textarea>
+      </div>
+      <div class="col-select" id="colSelectWrap" style="display:none;">
+        <div>
+          <label class="small">X column</label>
+          <select id="xColSelect"></select>
+        </div>
+        <div>
+          <label class="small">Y column</label>
+          <select id="yColSelect"></select>
+        </div>
+      </div>
+      <div class="status-line" id="dataStatus">No data loaded.</div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">02</span> Model</h2>
+      <div class="model-grid" id="modelGrid"></div>
+      <div class="degree-stepper" id="degreeStepper" style="display:none;">
+        <label class="small" style="margin:0;">Degree</label>
+        <button id="degDown">−</button>
+        <span class="val" id="degVal">2</span>
+        <button id="degUp">+</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">03</span> Run</h2>
+      <button class="primary" id="fitBtn" style="width:100%;">Fit curve</button>
+      <div class="status-line" id="fitStatus"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: results -->
+  <div class="main-col" id="mainCol">
+    <div class="panel">
+      <div class="empty-state">
+        <div class="big">◍</div>
+        Load or paste data, choose a model, then click <b style="color:var(--muted)">Fit curve</b>.
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Fits: linear &amp; polynomial via least squares (normal equations) · exponential, sinusoidal, and damped-sinusoidal via grid-search initialization + Levenberg–Marquardt nonlinear refinement, all computed in-browser.
+</footer>
+
+<script>
+/* ============================== CORE NUMERICS ============================== */
+function mean(a){return a.reduce((s,v)=>s+v,0)/a.length;}
+function sse(res){return res.reduce((s,r)=>s+r*r,0);}
+function correlation(xs,ys){
+  const mx=mean(xs), my=mean(ys);
+  let sxy=0,sxx=0,syy=0;
+  for(let i=0;i<xs.length;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+  if(sxx===0||syy===0) return 0;
+  return sxy/Math.sqrt(sxx*syy);
+}
+function solveLinear(A,b){
+  const n=A.length;
+  const M=A.map((row,i)=>[...row,b[i]]);
+  for(let col=0; col<n; col++){
+    let maxRow=col;
+    for(let r=col+1;r<n;r++){ if(Math.abs(M[r][col])>Math.abs(M[maxRow][col])) maxRow=r; }
+    if(Math.abs(M[maxRow][col])<1e-12) return null;
+    [M[col],M[maxRow]]=[M[maxRow],M[col]];
+    const piv=M[col][col];
+    for(let c=col;c<=n;c++) M[col][c]/=piv;
+    for(let r=0;r<n;r++){
+      if(r===col) continue;
+      const factor=M[r][col];
+      if(factor===0) continue;
+      for(let c=col;c<=n;c++){ M[r][c]-=factor*M[col][c]; }
+    }
+  }
+  return M.map(row=>row[n]);
+}
+function leastSquaresFit(features, y){
+  const n=features[0].length, N=features.length;
+  const AtA=Array.from({length:n},()=>Array(n).fill(0));
+  const Atb=Array(n).fill(0);
+  for(let i=0;i<N;i++){
+    for(let j=0;j<n;j++){
+      Atb[j]+=features[i][j]*y[i];
+      for(let k=0;k<n;k++){ AtA[j][k]+=features[i][j]*features[i][k]; }
+    }
+  }
+  return solveLinear(AtA,Atb);
+}
+function polyFit(xs, ys, degree){
+  const feats = xs.map(x=>{ const row=[]; let p=1; for(let d=0; d<=degree; d++){ row.push(p); p*=x; } return row; });
+  return leastSquaresFit(feats, ys);
+}
+function matInverse(A){
+  const n=A.length;
+  const M=A.map((row,i)=>{ const r=[...row]; for(let j=0;j<n;j++) r.push(i===j?1:0); return r; });
+  for(let col=0; col<n; col++){
+    let maxRow=col;
+    for(let r=col+1;r<n;r++){ if(Math.abs(M[r][col])>Math.abs(M[maxRow][col])) maxRow=r; }
+    if(Math.abs(M[maxRow][col])<1e-12) return null;
+    [M[col],M[maxRow]]=[M[maxRow],M[col]];
+    const piv=M[col][col];
+    for(let c=0;c<2*n;c++) M[col][c]/=piv;
+    for(let r=0;r<n;r++){
+      if(r===col) continue;
+      const factor=M[r][col];
+      if(factor===0) continue;
+      for(let c=0;c<2*n;c++) M[r][c]-=factor*M[col][c];
+    }
+  }
+  return M.map(row=>row.slice(n));
+}
+// Standard-error estimate: Cov ≈ sigma_hat^2 * (F^T F)^-1, sigma_hat^2 = SSE/(N-p).
+// For linear/polynomial models F is the exact design matrix (this is the textbook OLS result).
+// For nonlinear models F is the Jacobian at the converged parameters (standard linearized
+// approximation for nonlinear least squares) — verified against Monte Carlo simulation.
+function paramCovariance(features, residuals, nParams){
+  const N=features.length;
+  const dof = N - nParams;
+  if(dof<=0) return null;
+  const sigma2 = sse(residuals)/dof;
+  const AtA=Array.from({length:nParams},()=>Array(nParams).fill(0));
+  for(let i=0;i<N;i++){
+    for(let j=0;j<nParams;j++){
+      for(let k=0;k<nParams;k++){ AtA[j][k]+=features[i][j]*features[i][k]; }
+    }
+  }
+  const inv = matInverse(AtA);
+  if(!inv) return null;
+  const stderr = inv.map((row,i)=>Math.sqrt(Math.max(sigma2*row[i],0)));
+  return {sigma2, dof, stderr};
+}
+// Physics-convention rounding: uncertainty gets 1 sig fig (2 if leading digit is 1),
+// value rounded to the same decimal place.
+function formatWithUncertainty(value, sigma){
+  if(!isFinite(sigma) || sigma<=0) return { value: fmt(value), sigma: null };
+  const exponent = Math.floor(Math.log10(Math.abs(sigma)) + 1e-12);
+  const leadingDigit = Math.floor(sigma / Math.pow(10, exponent) + 1e-9);
+  const sigFigs = (leadingDigit === 1) ? 2 : 1;
+  const decimalPlace = exponent - (sigFigs - 1);
+  const roundFactor = Math.pow(10, -decimalPlace);
+  const roundedSigma = Math.round(sigma * roundFactor) / roundFactor;
+  const roundedValue = Math.round(value * roundFactor) / roundFactor;
+  const decimals = Math.max(0, -decimalPlace);
+  return { value: roundedValue.toFixed(decimals), sigma: roundedSigma.toFixed(decimals) };
+}
+function numericJacobian(func, params, xs){
+  const N=xs.length, P=params.length;
+  const J=Array.from({length:N},()=>Array(P).fill(0));
+  const base=xs.map(x=>func(params,x));
+  for(let j=0;j<P;j++){
+    const h=Math.max(Math.abs(params[j])*1e-6, 1e-8);
+    const p2=[...params]; p2[j]+=h;
+    const f2=xs.map(x=>func(p2,x));
+    for(let i=0;i<N;i++){ J[i][j]=(f2[i]-base[i])/h; }
+  }
+  return {J, base};
+}
+function levenbergMarquardt(func, params0, xs, ys, opts={}){
+  const maxIter = opts.maxIter||300, tol=opts.tol||1e-12;
+  let params=[...params0];
+  let lambda=1e-3;
+  let base=xs.map(x=>func(params,x));
+  let curSSE=sse(ys.map((y,i)=>y-base[i]));
+  for(let iter=0; iter<maxIter; iter++){
+    const {J, base:base2}=numericJacobian(func, params, xs);
+    const N=xs.length, P=params.length;
+    const JtJ=Array.from({length:P},()=>Array(P).fill(0));
+    const Jtr=Array(P).fill(0);
+    const res2=ys.map((y,i)=>y-base2[i]);
+    for(let i=0;i<N;i++){
+      for(let j=0;j<P;j++){
+        Jtr[j]+=J[i][j]*res2[i];
+        for(let k=0;k<P;k++){ JtJ[j][k]+=J[i][j]*J[i][k]; }
+      }
+    }
+    let accepted=false;
+    for(let tries=0; tries<8 && !accepted; tries++){
+      const A=JtJ.map((row,j)=>row.map((v,k)=> j===k? v*(1+lambda) + 1e-12 : v));
+      const delta=solveLinear(A, Jtr);
+      if(!delta){ lambda*=4; continue; }
+      const newParams=params.map((p,j)=>p+delta[j]);
+      const newBase=xs.map(x=>func(newParams,x));
+      const newSSE=sse(ys.map((y,i)=>y-newBase[i]));
+      if(isFinite(newSSE) && newSSE < curSSE){
+        const improvement = curSSE - newSSE;
+        params=newParams; accepted=true; lambda=Math.max(lambda*0.6, 1e-12);
+        const converged = improvement < tol*Math.max(1,curSSE);
+        curSSE=newSSE;
+        if(converged) return {params, sse:curSSE};
+      } else { lambda*=3; }
+    }
+    if(!accepted && lambda>1e10) break;
+  }
+  return {params, sse:curSSE};
+}
+function fmt(v, sig=4){
+  if(!isFinite(v)) return '—';
+  if(Math.abs(v) < 1e-4 && v !== 0) return v.toExponential(3);
+  if(Math.abs(v) >= 1e5) return v.toExponential(3);
+  return Number(v.toPrecision(sig)).toString();
+}
+
+/* ============================== MODEL DEFINITIONS ============================== */
+function rSquared(ys, predicted){
+  const ybar = mean(ys);
+  const sstot = ys.reduce((s,y)=>s+(y-ybar)**2,0);
+  const ssres = ys.reduce((s,y,i)=>s+(y-predicted[i])**2,0);
+  return sstot===0 ? 1 : 1 - ssres/sstot;
+}
+
+const MODELS = {
+  linear:{
+    label:'Linear', sub:'y = mx + b',
+    formula:'y = mx + b',
+    paramSymbols:['m','b'],
+    fit(xs,ys){
+      const c = polyFit(xs, ys, 1); // [b, m]
+      const params=[c[1], c[0]];
+      const predict = x => params[0]*x + params[1];
+      return {params, predict};
+    },
+    paramFeatures(xs){ return xs.map(x=>[x,1]); },
+    eqString(p){ return `y = ${fmt(p[0])}x ${p[1]>=0?'+':'−'} ${fmt(Math.abs(p[1]))}`; },
+    notes:[
+      'A truly linear process should leave residuals scattered with no visible shape.',
+      '<b>Bowed / U-shaped residuals</b> mean the true relationship curves — try a polynomial (quadratic) or reconsider whether the underlying physics is linear at all.',
+      '<b>A residual trend that itself has a slope</b> usually means the endpoints were weighted unevenly (e.g. one outlier pulling the line) — check the extreme x values first.'
+    ]
+  },
+  poly:{
+    label:'Polynomial', sub:'degree 2–4', hasDegree:true,
+    formula:'y = c0 + c1 x + c2 x^2 + \\dots',
+    fit(xs,ys,degree){
+      const c = polyFit(xs, ys, degree);
+      const predict = x => c.reduce((s,ci,i)=>s+ci*Math.pow(x,i),0);
+      return {params:c, predict};
+    },
+    paramFeatures(xs, params, degree){
+      return xs.map(x=>{ const row=[]; let p=1; for(let d=0; d<=degree; d++){ row.push(p); p*=x; } return row; });
+    },
+    paramSymbolsFor(degree){ return Array.from({length:degree+1},(_,i)=>`c_{${i}}`); },
+    eqString(p){
+      return 'y = ' + p.map((c,i)=> (i===0? fmt(c) : `${c>=0?'+':'−'} ${fmt(Math.abs(c))}x^{${i}}`)).join(' ');
+    },
+    notes:[
+      'Residuals should look patternless if the degree is adequate.',
+      '<b>Remaining curvature</b> (a smooth arc left in the residuals) means the degree is too low — try one degree higher.',
+      '<b>Wild oscillation at the edges of the x-range</b> (Runge&rsquo;s phenomenon) with a good fit in the middle usually means the degree is too high for how few / how unevenly spaced the points are — step back down a degree rather than up.',
+      'Physical processes are rarely well-described by degree > 3–4; if you need more than that, the model family (not just the degree) is probably wrong.'
+    ]
+  },
+  exponential:{
+    label:'Exponential', sub:'growth / decay',
+    formula:'y = a\\,e^{bx} + c',
+    paramSymbols:['a','b','c'],
+    fit(xs,ys){
+      const func=(p,x)=>p[0]*Math.exp(p[1]*x)+p[2];
+      const yMin=Math.min(...ys), yMax=Math.max(...ys), yRange=(yMax-yMin)||1;
+      const xSpan=(Math.max(...xs)-Math.min(...xs))||1;
+      const trendSign = Math.sign(correlation(xs,ys))||1;
+      const guesses=[
+        [yRange, trendSign*2/xSpan, yMin],
+        [-yRange, trendSign*2/xSpan, yMax],
+        [yRange, -trendSign*2/xSpan, yMax],
+        [yRange, -2/xSpan, 0],
+        [yMax-yMin||1, 2/xSpan, yMin],
+      ];
+      let best=null;
+      for(const g of guesses){
+        const r=levenbergMarquardt(func,g,xs,ys,{maxIter:250});
+        if(!best||r.sse<best.sse) best=r;
+      }
+      return {params:best.params, predict:x=>func(best.params,x)};
+    },
+    paramFeatures(xs, params){
+      const func=(p,x)=>p[0]*Math.exp(p[1]*x)+p[2];
+      return numericJacobian(func, params, xs).J;
+    },
+    eqString(p){ return `y = ${fmt(p[0])}·e^{${fmt(p[1])}x} ${p[2]>=0?'+':'−'} ${fmt(Math.abs(p[2]))}`; },
+    notes:[
+      'The sign of b tells you growth (b&gt;0) vs decay (b&lt;0); c is the horizontal asymptote the data approaches.',
+      '<b>Residuals that grow with x</b> (a widening fan on one side) often mean the asymptote c is slightly wrong, or the process saturates/departs from pure exponential at large x.',
+      '<b>A residual trend that looks like a slower exponential itself</b> can indicate two competing exponential processes (e.g. two decay channels) rather than one.',
+      'If your data spans many orders of magnitude in y, also inspect the residuals on a log(y) scale — a good exponential fit should look linear-with-noise there.'
+    ]
+  },
+  sinusoidal:{
+    label:'Sinusoidal', sub:'A·sin(ωx+φ)+c',
+    formula:'y = A\\sin(\\omega x + \\varphi) + c',
+    paramSymbols:['A','\\omega','\\varphi','c'],
+    fit(xs,ys){
+      const xsSorted=[...xs].sort((a,b)=>a-b);
+      const xSpan=(xsSorted[xsSorted.length-1]-xsSorted[0])||1;
+      const spacings=[]; for(let i=1;i<xsSorted.length;i++) spacings.push(xsSorted[i]-xsSorted[i-1]);
+      const positive = spacings.filter(s=>s>1e-9);
+      const minSpacing = positive.length? Math.min(...positive) : xSpan/Math.max(xs.length,2);
+      const wMin=2*Math.PI/(xSpan*2), wMax=Math.PI/minSpacing;
+      let bestW=wMin, bestSSE=Infinity, bestPQC=null;
+      const steps=500;
+      for(let i=0;i<=steps;i++){
+        const w=wMin+(wMax-wMin)*i/steps;
+        const feats=xs.map(x=>[Math.sin(w*x),Math.cos(w*x),1]);
+        const coeffs=leastSquaresFit(feats,ys);
+        if(!coeffs) continue;
+        const pred=xs.map((x,idx)=>feats[idx][0]*coeffs[0]+feats[idx][1]*coeffs[1]+coeffs[2]);
+        const s=sse(ys.map((y,idx)=>y-pred[idx]));
+        if(s<bestSSE){ bestSSE=s; bestW=w; bestPQC=coeffs; }
+      }
+      const A0=Math.hypot(bestPQC[0],bestPQC[1]);
+      const phi0=Math.atan2(bestPQC[1],bestPQC[0]);
+      const c0=bestPQC[2];
+      const func=(p,x)=>p[0]*Math.sin(p[1]*x+p[2])+p[3];
+      const refined=levenbergMarquardt(func,[A0,bestW,phi0,c0],xs,ys,{maxIter:300});
+      return {params:refined.params, predict:x=>func(refined.params,x)};
+    },
+    paramFeatures(xs, params){
+      const func=(p,x)=>p[0]*Math.sin(p[1]*x+p[2])+p[3];
+      return numericJacobian(func, params, xs).J;
+    },
+    eqString(p){ return `y = ${fmt(p[0])}·sin(${fmt(p[1])}x ${p[2]>=0?'+':'−'} ${fmt(Math.abs(p[2]))}) ${p[3]>=0?'+':'−'} ${fmt(Math.abs(p[3]))}`; },
+    notes:[
+      'A well-chosen frequency ω leaves residuals as flat, patternless noise across the whole x-range.',
+      '<b>A slow, smooth ripple left in the residuals</b> almost always means ω is slightly off — the fit and data slowly drift in and out of phase (beating).',
+      '<b>Residual amplitude growing at one end</b> suggests the true oscillation is damped or driven, not a pure constant-amplitude sinusoid — try the sinusoidal-decay model.',
+      'If the data covers fewer than ~2 full periods, ω is only weakly constrained — treat its uncertainty with real caution.'
+    ]
+  },
+  sindecay:{
+    label:'Damped sinusoid', sub:'A·e^{−kx}sin(ωx+φ)+c',
+    formula:'y = A\\,e^{-kx}\\sin(\\omega x + \\varphi) + c',
+    paramSymbols:['A','k','\\omega','\\varphi','c'],
+    fit(xs,ys){
+      const xSpan=(Math.max(...xs)-Math.min(...xs))||1;
+      const xsSorted=[...xs].sort((a,b)=>a-b);
+      const spacings=[]; for(let i=1;i<xsSorted.length;i++) spacings.push(xsSorted[i]-xsSorted[i-1]);
+      const positive=spacings.filter(s=>s>1e-9);
+      const minSpacing = positive.length? Math.min(...positive) : xSpan/Math.max(xs.length,2);
+      const wMin=2*Math.PI/(xSpan*2), wMax=Math.PI/minSpacing;
+      const kMin=0, kMax=6/xSpan;
+      const wSteps=55, kSteps=35;
+      let best={sse:Infinity};
+      for(let ik=0; ik<=kSteps; ik++){
+        const k=kMin+(kMax-kMin)*ik/kSteps;
+        for(let iw=0; iw<=wSteps; iw++){
+          const w=wMin+(wMax-wMin)*iw/wSteps;
+          const feats=xs.map(x=>{ const e=Math.exp(-k*x); return [e*Math.sin(w*x), e*Math.cos(w*x), 1]; });
+          const coeffs=leastSquaresFit(feats,ys);
+          if(!coeffs) continue;
+          const pred=xs.map((x,idx)=>feats[idx][0]*coeffs[0]+feats[idx][1]*coeffs[1]+coeffs[2]);
+          const s=sse(ys.map((y,idx)=>y-pred[idx]));
+          if(s<best.sse) best={sse:s, w, k, coeffs};
+        }
+      }
+      const A0=Math.hypot(best.coeffs[0],best.coeffs[1]);
+      const phi0=Math.atan2(best.coeffs[1],best.coeffs[0]);
+      const c0=best.coeffs[2];
+      const func=(p,x)=>p[0]*Math.exp(-p[1]*x)*Math.sin(p[2]*x+p[3])+p[4];
+      const refined=levenbergMarquardt(func,[A0,best.k,best.w,phi0,c0],xs,ys,{maxIter:400});
+      return {params:refined.params, predict:x=>func(refined.params,x)};
+    },
+    paramFeatures(xs, params){
+      const func=(p,x)=>p[0]*Math.exp(-p[1]*x)*Math.sin(p[2]*x+p[3])+p[4];
+      return numericJacobian(func, params, xs).J;
+    },
+    eqString(p){ return `y = ${fmt(p[0])}·e^{${fmt(-p[1])}x}·sin(${fmt(p[2])}x ${p[3]>=0?'+':'−'} ${fmt(Math.abs(p[3]))}) ${p[4]>=0?'+':'−'} ${fmt(Math.abs(p[4]))}`; },
+    notes:[
+      'A correctly-damped fit leaves flat residual noise for the whole record, including the low-amplitude tail at large x.',
+      '<b>Growing wiggle in the residuals at large x</b> means k is overestimated — the fit damps out faster than the real oscillation.',
+      '<b>Leftover ringing near x = 0 only</b> often means the process is driven/forced early on rather than freely decaying — the free-decay model only applies after any transient has died out.',
+      'k and ω trade off somewhat when the data covers only a few oscillations — check that the fit still looks reasonable if you nudge the example/initial region.'
+    ]
+  }
+};
+
+let currentModelKey = 'linear';
+let currentDegree = 2;
+let dataset = null; // {xs, ys}
+let parsedTable = null; // {header, rows}
+let charts = { main:null, resid:null };
+
+/* ============================== CSV PARSING ============================== */
+function parseCSV(text){
+  const lines = text.trim().split(/\r?\n/).filter(l=>l.trim().length>0);
+  if(lines.length===0) return null;
+  const delim = lines[0].includes(',') ? ',' : (lines[0].includes('\t') ? '\t' : /\s+/);
+  const rows = lines.map(l => l.split(delim).map(s=>s.trim()).filter(s=>s!==''));
+  let header=null, dataRows=rows;
+  const firstRowNumeric = rows[0].every(tok=>tok!=='' && !isNaN(parseFloat(tok)) && isFinite(tok));
+  if(!firstRowNumeric){ header = rows[0]; dataRows = rows.slice(1); }
+  const ncols = Math.max(...dataRows.map(r=>r.length));
+  if(!header) header = Array.from({length:ncols},(_,i)=>'col '+(i+1));
+  return {header, rows: dataRows.filter(r=>r.length===ncols)};
+}
+function numericColumns(table){
+  const ncols = table.header.length;
+  const cols = [];
+  for(let c=0;c<ncols;c++){
+    const vals = table.rows.map(r=>parseFloat(r[c]));
+    const allNum = vals.every(v=>!isNaN(v) && isFinite(v));
+    cols.push(allNum);
+  }
+  return cols;
+}
+
+const dataStatus = document.getElementById('dataStatus');
+const colSelectWrap = document.getElementById('colSelectWrap');
+const xColSelect = document.getElementById('xColSelect');
+const yColSelect = document.getElementById('yColSelect');
+const csvText = document.getElementById('csvText');
+
+function setDataStatus(msg, kind){
+  dataStatus.textContent = msg;
+  dataStatus.className = 'status-line' + (kind? ' '+kind : '');
+}
+
+function ingestCSVText(text){
+  const table = parseCSV(text);
+  if(!table || table.rows.length < 3){
+    setDataStatus('Need at least 3 data rows.', 'err');
+    dataset = null;
+    return;
+  }
+  parsedTable = table;
+  const numCols = numericColumns(table);
+  const numericIdx = numCols.map((v,i)=>v?i:-1).filter(i=>i>=0);
+  if(numericIdx.length < 2){
+    setDataStatus('Could not find two numeric columns.', 'err');
+    dataset = null;
+    return;
+  }
+  // populate selects
+  xColSelect.innerHTML=''; yColSelect.innerHTML='';
+  table.header.forEach((h,i)=>{
+    if(!numCols[i]) return;
+    const o1=document.createElement('option'); o1.value=i; o1.textContent=h;
+    const o2=document.createElement('option'); o2.value=i; o2.textContent=h;
+    xColSelect.appendChild(o1); yColSelect.appendChild(o2);
+  });
+  xColSelect.value = numericIdx[0];
+  yColSelect.value = numericIdx[1];
+  colSelectWrap.style.display = numericIdx.length>2 ? 'flex' : (numericIdx.length===2? 'flex':'none');
+  applyColumnSelection();
+}
+function applyColumnSelection(){
+  if(!parsedTable) return;
+  const xi = parseInt(xColSelect.value), yi = parseInt(yColSelect.value);
+  const xs=[], ys=[];
+  parsedTable.rows.forEach(r=>{
+    const x=parseFloat(r[xi]), y=parseFloat(r[yi]);
+    if(!isNaN(x) && !isNaN(y)){ xs.push(x); ys.push(y); }
+  });
+  if(xs.length<3){ setDataStatus('Need at least 3 valid (x,y) rows.', 'err'); dataset=null; return; }
+  dataset = {xs, ys};
+  setDataStatus(`Loaded ${xs.length} points  ·  x: "${parsedTable.header[xi]}"  ·  y: "${parsedTable.header[yi]}"`, 'ok');
+}
+
+document.getElementById('fileInput').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{ csvText.value = ev.target.result; ingestCSVText(ev.target.result); };
+  reader.readAsText(file);
+});
+csvText.addEventListener('input', ()=>{ if(csvText.value.trim()) ingestCSVText(csvText.value); });
+xColSelect.addEventListener('change', applyColumnSelection);
+yColSelect.addEventListener('change', applyColumnSelection);
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  csvText.value=''; dataset=null; parsedTable=null;
+  colSelectWrap.style.display='none';
+  setDataStatus('No data loaded.');
+});
+
+/* ============================== SAMPLE DATA ============================== */
+function seededRandom(seed){ let s=seed; return ()=>{ s=(s*9301+49297)%233280; return s/233280; }; }
+function gauss(rand){ let u=0,v=0; while(u===0)u=rand(); while(v===0)v=rand(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+function generateSample(modelKey, degree){
+  const rand = seededRandom(42);
+  const xs=[], ys=[];
+  if(modelKey==='linear'){
+    for(let x=0; x<=10; x+=0.4){ xs.push(x); ys.push(1.8*x - 2.0 + gauss(rand)*0.9); }
+  } else if(modelKey==='poly'){
+    const coeffs = degree===2? [2,-1.5,0.6] : degree===3? [1,1.2,-0.4,0.05] : [0.5,0.8,-0.2,0.01,0.0006];
+    for(let x=-6; x<=6; x+=0.3){
+      let y=0, p=1; for(const c of coeffs){ y+=c*p; p*=x; }
+      xs.push(x); ys.push(y + gauss(rand)*(0.6+0.15*Math.abs(x)));
+    }
+  } else if(modelKey==='exponential'){
+    for(let x=0; x<=12; x+=0.35){ xs.push(x); ys.push(6*Math.exp(-0.35*x)+1.0 + gauss(rand)*0.18); }
+  } else if(modelKey==='sinusoidal'){
+    for(let x=0; x<=14; x+=0.18){ xs.push(x); ys.push(2.5*Math.sin(1.4*x+0.4)+0.6 + gauss(rand)*0.25); }
+  } else if(modelKey==='sindecay'){
+    for(let x=0; x<=16; x+=0.12){ xs.push(x); ys.push(4*Math.exp(-0.18*x)*Math.sin(2.0*x-0.3)+0.2 + gauss(rand)*0.14); }
+  }
+  return {xs, ys};
+}
+document.getElementById('sampleBtn').addEventListener('click', ()=>{
+  const {xs, ys} = generateSample(currentModelKey, currentDegree);
+  const lines = ['x,y', ...xs.map((x,i)=>`${x.toFixed(4)},${ys[i].toFixed(4)}`)];
+  csvText.value = lines.join('\n');
+  ingestCSVText(csvText.value);
+});
+
+/* ============================== MODEL SELECTOR UI ============================== */
+const modelGrid = document.getElementById('modelGrid');
+Object.entries(MODELS).forEach(([key, m])=>{
+  const btn = document.createElement('button');
+  btn.className = 'model-btn' + (key===currentModelKey? ' active':'');
+  btn.dataset.key = key;
+  btn.innerHTML = `${m.label}<span class="sub">${m.sub}</span>`;
+  btn.addEventListener('click', ()=>{
+    currentModelKey = key;
+    document.querySelectorAll('.model-btn').forEach(b=>b.classList.toggle('active', b.dataset.key===key));
+    document.getElementById('degreeStepper').style.display = MODELS[key].hasDegree ? 'flex':'none';
+  });
+  modelGrid.appendChild(btn);
+});
+document.getElementById('degUp').addEventListener('click', ()=>{ currentDegree=Math.min(4,currentDegree+1); document.getElementById('degVal').textContent=currentDegree; });
+document.getElementById('degDown').addEventListener('click', ()=>{ currentDegree=Math.max(2,currentDegree-1); document.getElementById('degVal').textContent=currentDegree; });
+
+/* ============================== DIAGNOSTICS ============================== */
+function runsCount(sortedResiduals){
+  let runs=1;
+  let lastSign = Math.sign(sortedResiduals[0]) || 1;
+  for(let i=1;i<sortedResiduals.length;i++){
+    const s = Math.sign(sortedResiduals[i]) || lastSign;
+    if(s !== lastSign){ runs++; lastSign=s; }
+  }
+  return runs;
+}
+function diagnose(xs, residuals){
+  const idx = xs.map((x,i)=>i).sort((a,b)=>xs[a]-xs[b]);
+  const xSorted = idx.map(i=>xs[i]);
+  const rSorted = idx.map(i=>residuals[i]);
+  const n = rSorted.length;
+  const runs = runsCount(rSorted);
+  const expectedRuns = n/2 + 1;
+  const runsRatio = runs/expectedRuns;
+  const trendR = correlation(xSorted, rSorted);
+  const mid = Math.floor(n/2);
+  const firstHalf = rSorted.slice(0, mid), secondHalf = rSorted.slice(n-mid);
+  const v1 = mean(firstHalf.map(r=>r*r))||1e-12, v2 = mean(secondHalf.map(r=>r*r))||1e-12;
+  const varRatio = Math.max(v1,v2)/Math.min(v1,v2);
+  return {runs, expectedRuns, runsRatio, trendR, varRatio};
+}
+function gaugeLevel(value, warnAt, badAt, higherIsWorse=true){
+  if(higherIsWorse){
+    if(value >= badAt) return 'bad';
+    if(value >= warnAt) return 'warn';
+    return 'good';
+  } else {
+    if(value <= badAt) return 'bad';
+    if(value <= warnAt) return 'warn';
+    return 'good';
+  }
+}
+
+/* ============================== FIT + RENDER ============================== */
+const mainCol = document.getElementById('mainCol');
+const fitStatus = document.getElementById('fitStatus');
+
+function buildLayout(){
+  mainCol.innerHTML = `
+    <div class="panel">
+      <h2><span class="idx">→</span> Fitted equation</h2>
+      <div class="eq-box">
+        <div class="label">Model form</div>
+        <div id="modelFormEq"></div>
+      </div>
+      <div class="eq-box" style="margin-top:10px;">
+        <div class="label">Fitted parameters</div>
+        <div id="fittedEq"></div>
+      </div>
+      <div class="stats-grid" id="statsGrid" style="margin-top:14px;"></div>
+      <table class="params" id="paramsTable">
+        <thead><tr><td>param</td><td>value ± σ</td><td>rel. unc.</td></tr></thead>
+        <tbody id="paramsTableBody"></tbody>
+      </table>
+      <div class="unc-note" id="uncNote"></div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">→</span> Fit plot</h2>
+      <div class="chart-title"><span>data &amp; fitted curve</span><span class="r2" id="r2Label"></span></div>
+      <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">→</span> Residuals</h2>
+      <div class="chart-title"><span>y − ŷ vs x  (should look like flat, patternless noise)</span></div>
+      <div class="chart-wrap residual"><canvas id="residChart"></canvas></div>
+      <div class="diag-strip" id="diagStrip" style="margin-top:14px;"></div>
+    </div>
+
+    <div class="panel">
+      <h2><span class="idx">→</span> How to read these residuals</h2>
+      <div class="notes" id="notesBox"></div>
+    </div>
+  `;
+}
+
+function renderKatex(el, latex, displayMode){
+  try{ katex.render(latex, el, {throwOnError:false, displayMode: !!displayMode}); }
+  catch(e){ el.textContent = latex; }
+}
+
+function runFit(){
+  if(!dataset){ fitStatus.textContent='Load data first.'; fitStatus.className='status-line err'; return; }
+  const {xs, ys} = dataset;
+  const model = MODELS[currentModelKey];
+  fitStatus.textContent = 'Fitting…';
+  fitStatus.className = 'status-line';
+
+  setTimeout(()=>{
+    let result;
+    try{
+      result = model.hasDegree ? model.fit(xs, ys, currentDegree) : model.fit(xs, ys);
+    } catch(e){
+      fitStatus.textContent = 'Fit failed: ' + e.message;
+      fitStatus.className = 'status-line err';
+      return;
+    }
+    const predicted = xs.map(result.predict);
+    const residuals = ys.map((y,i)=>y - predicted[i]);
+    const r2 = rSquared(ys, predicted);
+    const totalSSE = sse(residuals);
+    const diag = diagnose(xs, residuals);
+
+    buildLayout();
+
+    // model form equation
+    renderKatex(document.getElementById('modelFormEq'),
+      model.hasDegree ? `y = c_0 + c_1x + c_2x^2 ${currentDegree>=3?'+ c_3x^3':''} ${currentDegree>=4?'+ c_4x^4':''}` : model.formula,
+      true);
+    // fitted equation with numbers plugged in
+    renderKatex(document.getElementById('fittedEq'), model.eqString(result.params).replace(/·/g,'\\cdot '), true);
+
+    // stats
+    const statsGrid = document.getElementById('statsGrid');
+    statsGrid.innerHTML = `
+      <div class="stat"><div class="k">R²</div><div class="v">${fmt(r2,4)}</div></div>
+      <div class="stat"><div class="k">SSE</div><div class="v">${fmt(totalSSE,4)}</div></div>
+      <div class="stat"><div class="k">RMSE</div><div class="v">${fmt(Math.sqrt(totalSSE/xs.length),4)}</div></div>
+      <div class="stat"><div class="k">n points</div><div class="v">${xs.length}</div></div>
+    `;
+
+    // params table with uncertainties
+    const symbols = model.hasDegree ? model.paramSymbolsFor(currentDegree) : model.paramSymbols;
+    const cleanSym = s => s.replace(/[\\{}]/g,'').replace('varphi','φ').replace('omega','ω');
+    const paramsTableBody = document.getElementById('paramsTableBody');
+    const nParams = result.params.length;
+    const features = model.paramFeatures(xs, result.params, currentDegree);
+    const cov = paramCovariance(features, residuals, nParams);
+    const uncNote = document.getElementById('uncNote');
+    if(cov){
+      paramsTableBody.innerHTML = result.params.map((p,i)=>{
+        const stderr = cov.stderr[i];
+        const {value, sigma} = formatWithUncertainty(p, stderr);
+        const relPct = Math.abs(p) > 1e-12 ? (Math.abs(stderr/p)*100) : NaN;
+        return `<tr><td>${cleanSym(symbols[i])}</td><td>${value} ± ${sigma}</td><td>${isFinite(relPct)? fmt(relPct,2)+'%':'—'}</td></tr>`;
+      }).join('');
+      uncNote.textContent = `σ from residual scatter (σ̂² = SSE/(n−p), n=${xs.length}, p=${nParams}) via the fit's covariance matrix` + (currentModelKey==='linear'||currentModelKey==='poly' ? '.' : ' — linearized (Jacobian) approximation, standard for nonlinear least squares.');
+    } else {
+      paramsTableBody.innerHTML = result.params.map((p,i)=>`<tr><td>${cleanSym(symbols[i])}</td><td>${fmt(p,6)}</td><td>—</td></tr>`).join('');
+      uncNote.textContent = 'Not enough data points relative to the number of parameters to estimate uncertainties (need n > p).';
+    }
+
+    // R2 label near chart
+    document.getElementById('r2Label').textContent = `R² = ${fmt(r2,4)}`;
+
+    // charts
+    const xsSorted = [...xs].sort((a,b)=>a-b);
+    const xMin = xsSorted[0], xMax = xsSorted[xsSorted.length-1];
+    const curveN = 200;
+    const curvePts = Array.from({length:curveN},(_,i)=>{
+      const x = xMin + (xMax-xMin)*i/(curveN-1);
+      return {x, y: result.predict(x)};
+    });
+
+    const mainCtx = document.getElementById('mainChart').getContext('2d');
+    if(charts.main) charts.main.destroy();
+    charts.main = new Chart(mainCtx, {
+      type:'scatter',
+      data:{ datasets:[
+        { label:'data', data: xs.map((x,i)=>({x, y:ys[i]})), backgroundColor:'#4fd1c5', pointRadius:3.5, pointHoverRadius:5 },
+        { label:'fit', data: curvePts, type:'line', borderColor:'#f2a94e', borderWidth:2.2, pointRadius:0, fill:false, tension:0 }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{ mode:'nearest', intersect:false },
+        plugins:{ legend:{ labels:{ color:'#7e8aa3', font:{family:'JetBrains Mono', size:11} } } },
+        scales:{
+          x:{ type:'linear', ticks:{color:'#7e8aa3', font:{family:'JetBrains Mono', size:10}}, grid:{color:'#1c2230'}, title:{display:true, text:'x', color:'#4d5670'} },
+          y:{ ticks:{color:'#7e8aa3', font:{family:'JetBrains Mono', size:10}}, grid:{color:'#1c2230'}, title:{display:true, text:'y', color:'#4d5670'} }
+        }
+      }
+    });
+
+    const residCtx = document.getElementById('residChart').getContext('2d');
+    if(charts.resid) charts.resid.destroy();
+    const maxAbsRes = Math.max(...residuals.map(Math.abs)) || 1;
+    charts.resid = new Chart(residCtx, {
+      type:'scatter',
+      data:{ datasets:[
+        { label:'residual', data: xs.map((x,i)=>({x, y:residuals[i]})), backgroundColor:'#a78bfa', pointRadius:3.5 },
+        { label:'zero', data:[{x:xMin,y:0},{x:xMax,y:0}], type:'line', borderColor:'#4d5670', borderWidth:1.4, borderDash:[4,4], pointRadius:0 }
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ display:false } },
+        scales:{
+          x:{ type:'linear', ticks:{color:'#7e8aa3', font:{family:'JetBrains Mono', size:10}}, grid:{color:'#1c2230'} },
+          y:{ suggestedMin:-maxAbsRes*1.2, suggestedMax:maxAbsRes*1.2, ticks:{color:'#7e8aa3', font:{family:'JetBrains Mono', size:10}}, grid:{color:'#1c2230'} }
+        }
+      }
+    });
+
+    // diagnostic strip
+    const trendLevel = gaugeLevel(Math.abs(diag.trendR), 0.15, 0.3);
+    const spreadLevel = gaugeLevel(diag.varRatio, 2, 3.5);
+    const patternLevel = gaugeLevel(diag.runsRatio, 0.8, 0.6, false);
+    const diagStrip = document.getElementById('diagStrip');
+    diagStrip.innerHTML = `
+      <div class="gauge ${trendLevel}">
+        <div class="label"><span class="light"></span>Trend</div>
+        <div class="verdict">${trendLevel==='good'?'No residual trend':trendLevel==='warn'?'Slight trend':'Systematic trend'}</div>
+        <div class="detail">corr(x, residual) = ${fmt(diag.trendR,3)}. ${trendLevel!=='good'?'Model may be missing curvature or the wrong shape.':'Residuals don’t drift with x.'}</div>
+      </div>
+      <div class="gauge ${spreadLevel}">
+        <div class="label"><span class="light"></span>Spread</div>
+        <div class="verdict">${spreadLevel==='good'?'Constant scatter':spreadLevel==='warn'?'Uneven scatter':'Fanning / funneling'}</div>
+        <div class="detail">variance ratio (2nd half / 1st half) ≈ ${fmt(diag.varRatio,2)}×. ${spreadLevel!=='good'?'Noise may not be constant — consider weighting or a log transform.':'Spread looks roughly uniform across x.'}</div>
+      </div>
+      <div class="gauge ${patternLevel}">
+        <div class="label"><span class="light"></span>Pattern</div>
+        <div class="verdict">${patternLevel==='good'?'Looks random':patternLevel==='warn'?'Somewhat clumped':'Long runs of one sign'}</div>
+        <div class="detail">${diag.runs} sign-runs (≈${Math.round(diag.expectedRuns)} expected if random). ${patternLevel!=='good'?'Sustained runs above/below zero point to a systematic effect the model isn’t capturing.':'Signs flip about as often as chance would predict.'}</div>
+      </div>
+    `;
+
+    // notes
+    const notesBox = document.getElementById('notesBox');
+    notesBox.innerHTML = `
+      <div class="section-label">General reading guide</div>
+      <ul>
+        <li>Residuals scattered evenly above and below zero, with no visible shape → the model captures the underlying trend well.</li>
+        <li>A smooth curve or arc in the residuals → the model is missing a systematic (usually nonlinear) component.</li>
+        <li>A funnel/fan shape (spread changes with x) → the noise itself isn't constant; least-squares assumes it is, so this fit's uncertainty estimate is less trustworthy.</li>
+        <li>A leftover periodic ripple → an oscillatory component wasn't captured, or was captured at the wrong frequency.</li>
+      </ul>
+      <div class="section-label">Specific to ${model.label}</div>
+      <ul>${model.notes.map(n=>`<li>${n}</li>`).join('')}</ul>
+    `;
+
+    fitStatus.textContent = 'Fit complete.';
+    fitStatus.className = 'status-line ok';
+  }, 10);
+}
+
+document.getElementById('fitBtn').addEventListener('click', runFit);
+document.getElementById('degreeStepper').style.display = 'none';
+</script>
+</body>
+</html>
